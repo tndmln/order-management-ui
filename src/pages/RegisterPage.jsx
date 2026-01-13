@@ -6,7 +6,7 @@ export default function RegisterPage({ onRegister }) {
   const navigate = useNavigate();
 
   const userLanguage = navigator.language.startsWith("id") ? "id" : "en";
-  const t = translations[userLanguage]; // Sekarang 't' akan digunakan di bawah
+  const t = translations[userLanguage];
 
   return (
     <div

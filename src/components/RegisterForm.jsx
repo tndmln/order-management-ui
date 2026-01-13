@@ -1,15 +1,32 @@
 import React, { useState } from "react";
 import { translations } from "../constans/translations";
+import { registerUser } from "../api/authService";
 
-export default function RegisterForm({ onRegister, lang }) {
+export default function RegisterForm({ lang }) {
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
-  
-  // Ambil teks berdasarkan bahasa yang dikirim dari RegisterPage
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const t = translations[lang || "en"];
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onRegister(formData);
+    setLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const result = await registerUser(formData);
+      setSuccess("Registration successful!"); // bisa diganti t.registerSuccess
+      console.log("User registered:", result);
+      // Optional: reset form
+      setFormData({ name: "", email: "", password: "" });
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.message || "Registration failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -17,51 +34,56 @@ export default function RegisterForm({ onRegister, lang }) {
       onSubmit={handleSubmit}
       style={{
         display: "flex",
-        flexDirection: "column", // Membuat input berderet ke bawah
-        gap: "15px",             // Memberi jarak antar elemen
-        width: "100%",           // Mengikuti lebar container (card)
+        flexDirection: "column",
+        gap: "15px",
+        width: "100%",
       }}
     >
       <input
         type="text"
         placeholder={t.namePlaceholder || "Name"}
         style={inputStyle}
+        value={formData.name}
         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
       />
       <input
         type="email"
         placeholder={t.emailPlaceholder || "Email"}
         style={inputStyle}
+        value={formData.email}
         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
       />
       <input
         type="password"
         placeholder={t.passwordPlaceholder || "Password"}
         style={inputStyle}
+        value={formData.password}
         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
       />
       
-      <button type="submit" style={buttonStyle}>
-        {t.register || "Register"}
+      <button type="submit" style={buttonStyle} disabled={loading}>
+        {loading ? "Loading..." : t.register || "Register"}
       </button>
+
+      {error && <p style={{ color: "red", marginTop: "5px" }}>{error}</p>}
+      {success && <p style={{ color: "green", marginTop: "5px" }}>{success}</p>}
     </form>
   );
 }
 
-// Style objek agar kode lebih bersih
 const inputStyle = {
   width: "100%",
   padding: "12px",
   borderRadius: "6px",
   border: "1px solid #ccc",
-  boxSizing: "border-box", // Penting agar padding tidak merusak lebar
+  boxSizing: "border-box",
   fontSize: "14px",
 };
 
 const buttonStyle = {
   width: "100%",
   padding: "12px",
-  backgroundColor: "#222", // Sesuai warna di gambar kamu
+  backgroundColor: "#222",
   color: "#fff",
   border: "none",
   borderRadius: "6px",
